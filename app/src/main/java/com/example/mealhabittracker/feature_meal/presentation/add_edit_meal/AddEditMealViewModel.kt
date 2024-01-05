@@ -1,6 +1,8 @@
 package com.example.mealhabittracker.feature_meal.presentation.add_edit_meal
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -10,6 +12,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mealhabittracker.feature_meal.domain.model.Meal
 import com.example.mealhabittracker.feature_meal.domain.use_case.MealUseCases
+import com.example.mealhabittracker.feature_meal.utils.ConnectionStatus
+import com.example.mealhabittracker.feature_meal.utils.currentConnectivityStatus
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -17,7 +22,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AddEditMealViewModel @Inject constructor(
     private val mealUseCases: MealUseCases,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ): ViewModel() {
 
     private val _mealName = mutableStateOf(MealTextFieldState(
@@ -166,18 +172,29 @@ class AddEditMealViewModel @Inject constructor(
             is AddEditMealEvent.SaveMeal -> {
                 viewModelScope.launch {
                     try {
-                        mealUseCases.addMeal(
-                            Meal(
-                                name = mealName.value.text,
-                                type =  mealType.value.text,
-                                calories =  mealCalories.value.text.toInt(),
-                                protein = mealProtein.value.text.toInt(),
-                                fats = mealFats.value.text.toInt(),
-                                carbs = mealCarbs.value.text.toInt(),
-                                timestamp = System.currentTimeMillis(),
-                                id = currentMealId
-                            )
+                        val mealToAdd = Meal(
+                            name = mealName.value.text,
+                            type =  mealType.value.text,
+                            calories =  mealCalories.value.text.toInt(),
+                            protein = mealProtein.value.text.toInt(),
+                            fats = mealFats.value.text.toInt(),
+                            carbs = mealCarbs.value.text.toInt(),
+                            timestamp = System.currentTimeMillis(),
+                            id = currentMealId
                         )
+                        mealUseCases.addMeal(mealToAdd)
+
+                        if (context.currentConnectivityStatus == ConnectionStatus.Available) {
+                            mealUseCases.addMealServer(mealToAdd)
+                        } else {
+                            Log.d("save MealsViewModel", "No internet. Added locally.")
+                            Toast.makeText(
+                                context,
+                                "No internet. Added locally.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
                         _eventFlow.emit(UiEvent.SaveMeal)
                     } catch(e: Exception) {
                         _eventFlow.emit(

@@ -1,4 +1,4 @@
-package com.example.mealhabittracker.feature_meal.domain.use_case
+package com.example.mealhabittracker.feature_meal.domain.use_case.db_use_case
 
 import com.example.mealhabittracker.feature_meal.domain.model.InvalidMealException
 import com.example.mealhabittracker.feature_meal.domain.model.Meal

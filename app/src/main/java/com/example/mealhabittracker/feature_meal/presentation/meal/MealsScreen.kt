@@ -19,10 +19,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,10 +28,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,6 +45,10 @@ import com.example.mealhabittracker.R
 import com.example.mealhabittracker.feature_meal.presentation.meal.components.DeleteMealItem
 import com.example.mealhabittracker.feature_meal.presentation.meal.components.OrderSection
 import com.example.mealhabittracker.feature_meal.presentation.util.Screen
+import com.example.mealhabittracker.feature_meal.utils.ConnectionStatus
+import com.example.mealhabittracker.feature_meal.utils.currentConnectivityStatus
+import com.example.mealhabittracker.feature_meal.utils.observeConnectivityAsFlow
+import kotlinx.coroutines.flow.collectLatest
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -54,6 +59,16 @@ fun MealsScreen(
     val state = viewModel.state.value
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(key1 = true) {
+        viewModel.eventFlow.collectLatest { event ->
+            when(event) {
+                is MealsViewModel.UiEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(message = event.message)
+                }
+            }
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -100,6 +115,7 @@ fun MealsScreen(
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
+            CheckConnectivityStatus()
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = rememberLazyListState()
@@ -117,5 +133,28 @@ fun MealsScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Helper component to check the internet connection in real time.
+ */
+@Composable
+fun CheckConnectivityStatus() {
+    val connection by connectivityStatus()
+    val isConnected = connection === ConnectionStatus.Available
+    if (isConnected) {
+        Text("INTERNET ON")
+    } else {
+        Text(text = "INTERNET OFF")
+    }
+}
+
+@Composable
+fun connectivityStatus(): State<ConnectionStatus> {
+    val mCtx = LocalContext.current
+
+    return produceState(initialValue = mCtx.currentConnectivityStatus) {
+        mCtx.observeConnectivityAsFlow().collect{ value = it }
     }
 }

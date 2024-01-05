@@ -22,4 +22,10 @@ interface MealDao {
 
     @Delete
     suspend fun deleteMeal(meal: Meal)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(meals: List<Meal>)
+
+    @Delete
+    suspend fun deleteAll(meals: List<Meal>)
 }
