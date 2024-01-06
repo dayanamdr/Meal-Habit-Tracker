@@ -8,4 +8,5 @@ sealed class MealsEvent {
     data class DeleteMeal(val meal: Meal): MealsEvent()
     object RestoreMeal: MealsEvent()
     object ToggleOrderSection: MealsEvent()
+    object NetworkConnectivity: MealsEvent()
 }

@@ -121,6 +121,25 @@ class MealsViewModel @Inject constructor(
                     isOrderSectionVisible = !state.value.isOrderSectionVisible
                 )
             }
+            is MealsEvent.NetworkConnectivity -> {
+                viewModelScope.launch {
+                    if (context.currentConnectivityStatus == ConnectionStatus.Available) {
+                        _eventFlow.emit(
+                            UiEvent.ShowSnackbar(
+                                message = "Internet ON. Data synced."
+                            )
+                        )
+                        mealUseCase.synchronizeData()
+                    } else {
+                        Log.d("networkConnectivity MealsViewModel", "No internet. Could not sync.")
+                        _eventFlow.emit(
+                            UiEvent.ShowSnackbar(
+                                message = "No internet. Could not sync."
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 

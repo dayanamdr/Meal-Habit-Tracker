@@ -115,7 +115,7 @@ fun MealsScreen(
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
-            CheckConnectivityStatus()
+            CheckConnectivityStatus(viewModel = viewModel)
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = rememberLazyListState()
@@ -140,11 +140,12 @@ fun MealsScreen(
  * Helper component to check the internet connection in real time.
  */
 @Composable
-fun CheckConnectivityStatus() {
+fun CheckConnectivityStatus(viewModel: MealsViewModel) {
     val connection by connectivityStatus()
     val isConnected = connection === ConnectionStatus.Available
     if (isConnected) {
         Text("INTERNET ON")
+        viewModel.onEvent(MealsEvent.NetworkConnectivity)
     } else {
         Text(text = "INTERNET OFF")
     }
