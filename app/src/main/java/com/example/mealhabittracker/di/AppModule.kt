@@ -16,6 +16,7 @@ import com.example.mealhabittracker.feature_meal.domain.use_case.db_use_case.Get
 import com.example.mealhabittracker.feature_meal.domain.use_case.MealUseCases
 import com.example.mealhabittracker.feature_meal.domain.use_case.db_use_case.SynchronizeData
 import com.example.mealhabittracker.feature_meal.domain.use_case.server_use_case.AddMealServer
+import com.example.mealhabittracker.feature_meal.utils.WebSocketManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,6 +41,12 @@ object AppModule {
     @Singleton
     fun providesMoviesService(retrofit: Retrofit): MealService {
         return retrofit.create(MealService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWebSocketManager(): WebSocketManager {
+        return WebSocketManager("ws://192.168.1.128:4023")
     }
 
     @Provides

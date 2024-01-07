@@ -11,6 +11,7 @@ import com.example.mealhabittracker.feature_meal.domain.use_case.MealUseCases
 import com.example.mealhabittracker.feature_meal.domain.util.MealOrder
 import com.example.mealhabittracker.feature_meal.domain.util.OrderType
 import com.example.mealhabittracker.feature_meal.utils.ConnectionStatus
+import com.example.mealhabittracker.feature_meal.utils.WebSocketManager
 import com.example.mealhabittracker.feature_meal.utils.currentConnectivityStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MealsViewModel @Inject constructor(
     private val mealUseCase: MealUseCases,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val webSocketManager: WebSocketManager
 ): ViewModel() {
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
@@ -38,16 +40,16 @@ class MealsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            try {
-                mealUseCase.synchronizeData()
-            } catch(e: Exception) {
-                Log.d("init MealsViewModel", "Could not synchronize data with the server.")
-                _eventFlow.emit(
-                    UiEvent.ShowSnackbar(
-                        message = "No internet. Could not load server data."
-                    )
-                )
-            }
+//            try {
+//                mealUseCase.synchronizeData()
+//            } catch(e: Exception) {
+//                Log.d("init MealsViewModel", "Could not synchronize data with the server.")
+//                _eventFlow.emit(
+//                    UiEvent.ShowSnackbar(
+//                        message = "No internet. Could not load server data."
+//                    )
+//                )
+//            }
             getMeals(MealOrder.Date(OrderType.Descending))
         }
 
@@ -156,4 +158,9 @@ class MealsViewModel @Inject constructor(
     sealed class UiEvent {
         data class ShowSnackbar(val message: String): UiEvent()
     }
+
+//    override fun onCleared() {
+//        webSocketManager.closeWebSocket()
+//        super.onCleared()
+//    }
 }

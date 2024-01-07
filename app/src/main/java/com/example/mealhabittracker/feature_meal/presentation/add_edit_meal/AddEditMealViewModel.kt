@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mealhabittracker.feature_meal.domain.model.Meal
 import com.example.mealhabittracker.feature_meal.domain.use_case.MealUseCases
 import com.example.mealhabittracker.feature_meal.utils.ConnectionStatus
+import com.example.mealhabittracker.feature_meal.utils.WebSocketManager
 import com.example.mealhabittracker.feature_meal.utils.currentConnectivityStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +24,8 @@ import kotlinx.coroutines.launch
 class AddEditMealViewModel @Inject constructor(
     private val mealUseCases: MealUseCases,
     savedStateHandle: SavedStateHandle,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val webSocketManager: WebSocketManager
 ): ViewModel() {
 
     private val _mealName = mutableStateOf(MealTextFieldState(
@@ -187,14 +189,23 @@ class AddEditMealViewModel @Inject constructor(
                         if (context.currentConnectivityStatus == ConnectionStatus.Available) {
                             mealUseCases.addMealServer(mealToAdd)
                         } else {
-                            Log.d("save MealsViewModel", "No internet. Added locally.")
-                            Toast.makeText(
-                                context,
-                                "No internet. Added locally.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                            if (currentMealId == null) {
+                                Log.d("save MealsViewModel", "No internet. Added locally.")
+                                Toast.makeText(
+                                    context,
+                                    "No internet. Added locally.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Log.d("save MealsViewModel", "No internet. Updated locally.")
+                                Toast.makeText(
+                                    context,
+                                    "No internet. Updated locally.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
 
+                        }
                         _eventFlow.emit(UiEvent.SaveMeal)
                     } catch(e: Exception) {
                         _eventFlow.emit(
@@ -218,4 +229,9 @@ class AddEditMealViewModel @Inject constructor(
         object SaveMeal: UiEvent()
         object CancelSaveMeal: UiEvent()
     }
+
+//    override fun onCleared() {
+//        webSocketManager.closeWebSocket()
+//        super.onCleared()
+//    }
 }
